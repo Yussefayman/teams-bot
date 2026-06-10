@@ -1,0 +1,36 @@
+{
+  "summary_ar": "ناقش الفريق حالة الإطلاق واتفق على نقل الـ API Gateway إلى production نهاية الأسبوع، مع متابعة موضوع الـ latency.",
+  "decisions_ar": [
+    "اعتماد نقل الـ API Gateway إلى production يوم الخميس",
+    "تثبيت إصدار الـ SDK الحالي حتى انتهاء الـ regression tests"
+  ],
+  "action_items": [
+    {
+      "description_ar": "تجهيز خطة الـ rollback ومشاركتها مع الفريق",
+      "owner_name": "Sara Al-Otaibi",
+      "due_hint": "قبل يوم الأربعاء"
+    },
+    {
+      "description_ar": "مراجعة الـ monitoring dashboards للـ latency",
+      "owner_name": "غير محدد",
+      "due_hint": null
+    }
+  ],
+  "proposed_meetings": [
+    {
+      "title_ar": "متابعة إطلاق الـ API Gateway",
+      "datetime_iso": "2026-06-16T15:00:00+03:00",
+      "datetime_text": "الثلاثاء الجاي الساعة ٣ العصر",
+      "confidence": "high",
+      "attendees": ["يوسف أيمن", "Sara Al-Otaibi"]
+    },
+    {
+      "title_ar": "مراجعة الـ performance",
+      "datetime_iso": null,
+      "datetime_text": "الأسبوع الجاي",
+      "confidence": "low",
+      "attendees": ["يوسف أيمن"]
+    }
+  ],
+  "language_note": "تم الإبقاء على المصطلحات التقنية بالإنجليزية كما وردت."
+}

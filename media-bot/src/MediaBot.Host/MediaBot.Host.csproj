@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Cross-platform ASP.NET host: HTTP API, DI, config, and call orchestration.
+    Builds and runs on macOS/Linux with CALL_SOURCE=fake. The real Teams media
+    socket lives in MediaBot.Graph, which is referenced and compiled ONLY on Windows
+    (see the conditional ProjectReference below + the WINDOWS symbol).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mahdar.MediaBot.Host</RootNamespace>
+    <AssemblyName>Mahdar.MediaBot.Host</AssemblyName>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MediaBot.Core/MediaBot.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Windows-only: the Graph Communications media integration. Skipped on mac/Linux. -->
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <ProjectReference Include="../MediaBot.Graph/MediaBot.Graph.csproj" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+
+</Project>

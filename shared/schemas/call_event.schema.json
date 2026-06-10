@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mahdar.local/schemas/call_event.schema.json",
+  "title": "CallEndedEvent",
+  "description": "Payload POSTed by the media bot to the orchestrator at /webhooks/call-ended.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meetingId", "chatThreadId", "organizerId", "participants", "startedAt", "endedAt"],
+  "properties": {
+    "meetingId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Our internal meeting id; correlation id across all three services."
+    },
+    "chatThreadId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Teams meeting chat thread id, captured by the bot on join. Used to post the MoM card."
+    },
+    "organizerId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "AAD object id of the meeting organizer. Calendar events are created on this user."
+    },
+    "participants": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/participant" },
+      "description": "Final roster observed during the call."
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp the bot joined / call started."
+    },
+    "endedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp the call ended."
+    }
+  },
+  "$defs": {
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["displayName", "aadId"],
+      "properties": {
+        "displayName": { "type": "string", "minLength": 1 },
+        "aadId": { "type": "string", "minLength": 1 },
+        "email": { "type": "string" }
+      }
+    }
+  }
+}

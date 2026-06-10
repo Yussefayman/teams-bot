@@ -1,0 +1,8 @@
+{
+  "t_start": 1.0,
+  "t_end": 2.0,
+  "text": "مرحبا",
+  "lang_detected": "ar",
+  "avg_logprob": -0.2,
+  "speaker": "unexpected-field"
+}

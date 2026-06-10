@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mahdar.local/schemas/mom.schema.json",
+  "title": "MeetingOfMinutes",
+  "description": "Structured Arabic Meeting-of-Minutes produced by the orchestrator LLM call. Written Arabic is MSA; English technical terms are preserved in Latin script inline.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary_ar", "decisions_ar", "action_items", "proposed_meetings", "language_note"],
+  "properties": {
+    "summary_ar": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Summary paragraph in Arabic."
+    },
+    "decisions_ar": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Decisions taken, in Arabic."
+    },
+    "action_items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/actionItem" }
+    },
+    "proposed_meetings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/proposedMeeting" }
+    },
+    "language_note": {
+      "type": ["string", "null"],
+      "description": "Optional note, e.g. mixed Arabic/English terms preserved."
+    }
+  },
+  "$defs": {
+    "actionItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description_ar", "owner_name", "due_hint"],
+      "properties": {
+        "description_ar": { "type": "string", "minLength": 1 },
+        "owner_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Participant display name when identifiable, else 'غير محدد'."
+        },
+        "due_hint": {
+          "type": ["string", "null"],
+          "description": "Verbatim due phrase, e.g. 'نهاية الأسبوع', or null."
+        }
+      }
+    },
+    "proposedMeeting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title_ar", "datetime_iso", "datetime_text", "confidence", "attendees"],
+      "properties": {
+        "title_ar": { "type": "string", "minLength": 1 },
+        "datetime_iso": {
+          "type": ["string", "null"],
+          "description": "ISO 8601 with timezone, only when explicitly stated and unambiguous; else null."
+        },
+        "datetime_text": {
+          "type": "string",
+          "description": "Verbatim phrase from the conversation, e.g. 'الثلاثاء الجاي الساعة ٣'."
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "high only when a concrete day/time was stated. Only high + non-null datetime_iso auto-creates an event."
+        },
+        "attendees": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Participant display names."
+        }
+      }
+    }
+  }
+}

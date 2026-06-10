@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mahdar.local/schemas/transcript_segment.schema.json",
+  "title": "TranscriptSegment",
+  "description": "One transcribed utterance produced by the STT service. Timestamps are seconds relative to meeting start.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["t_start", "t_end", "text", "lang_detected", "avg_logprob"],
+  "properties": {
+    "t_start": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Segment start, seconds since meeting start."
+    },
+    "t_end": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Segment end, seconds since meeting start. Must be >= t_start."
+    },
+    "text": {
+      "type": "string",
+      "description": "Transcribed text. Arabic with English technical terms preserved in Latin script."
+    },
+    "lang_detected": {
+      "type": "string",
+      "description": "Language code detected by the transcriber, e.g. 'ar' or 'en'. 'unknown' when auto-detect was inconclusive.",
+      "minLength": 1
+    },
+    "avg_logprob": {
+      "type": "number",
+      "description": "Average token log-probability reported by faster-whisper for this segment."
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "meetingId": "mtg-2026-06-10-001",
+  "chatThreadId": "19:meeting_abc123@thread.v2",
+  "organizerId": "8c1f2a30-1111-4d2e-9aaa-000000000001",
+  "participants": [
+    { "displayName": "يوسف أيمن", "aadId": "8c1f2a30-1111-4d2e-9aaa-000000000001", "email": "youssef@contoso.onmicrosoft.com" },
+    { "displayName": "Sara Al-Otaibi", "aadId": "8c1f2a30-2222-4d2e-9aaa-000000000002" }
+  ],
+  "startedAt": "2026-06-10T09:00:12Z",
+  "endedAt": "2026-06-10T09:34:50Z"
+}

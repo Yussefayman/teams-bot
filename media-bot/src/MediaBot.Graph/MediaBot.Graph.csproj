@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    WINDOWS-ONLY. The Graph Communications media platform ships native Windows media
+    libraries (application-hosted media has no Linux/macOS support — Microsoft's hard
+    constraint, plan §1). This project therefore targets net8.0-windows and is only
+    referenced by the Host on Windows. Do not attempt to build it on macOS/Linux.
+
+    Pin these to the versions used by the current microsoft/graph-comms-samples
+    RecordingBot sample; verify exact versions when scaffolding on the VM.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Mahdar.MediaBot.Graph</RootNamespace>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MediaBot.Core/MediaBot.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Versions are placeholders; reconcile against the RecordingBot sample on the VM. -->
+    <PackageReference Include="Microsoft.Graph.Communications.Calls" Version="1.2.0.10183" />
+    <PackageReference Include="Microsoft.Graph.Communications.Calls.Media" Version="1.2.0.10183" />
+    <PackageReference Include="Microsoft.Graph.Communications.Client" Version="1.2.0.10183" />
+  </ItemGroup>
+
+</Project>

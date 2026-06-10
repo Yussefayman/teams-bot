@@ -1,0 +1,32 @@
+# secrets / config
+*.env
+.env
+.env.*
+!.env.template
+appsettings.json
+appsettings.*.json
+!appsettings.template.json
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# dotnet
+bin/
+obj/
+*.user
+
+# data / artifacts
+data/
+*.wav
+*.jsonl
+!shared/examples/*.jsonl
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/

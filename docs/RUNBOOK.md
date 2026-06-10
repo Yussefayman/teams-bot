@@ -32,9 +32,31 @@ dotnet test media-bot/tests/MediaBot.Tests.csproj
 `CALL_SOURCE=graph` + Azure env vars; start `Mahdar.MediaBot.Host.exe` (or a Windows
 service). See `docs/SETUP-AZURE.md`.
 
-## stt-service (M2) / orchestrator (M3) — not yet implemented
-Each will have its own `deploy.sh` and run with a single command (FastAPI + uvicorn),
-configured entirely via `.env` (see each service's `.env.template`).
+## Full pipeline demo (Mac, real Groq)
+```bash
+# needs GROQ_API_KEY in stt-service/.env and orchestrator/.env
+scripts/demo_e2e.sh
+```
+Runs media-bot(fake audio) → STT(Groq Whisper) → orchestrator(Groq LLM + FakeGraph) and
+prints the transcript, the auto-created event, and the Arabic MoM adaptive card.
+
+## stt-service (Component B)
+```bash
+cd stt-service && TRANSCRIBER=groq GROQ_API_KEY=... ./deploy.sh   # :8799
+../.venv/bin/pytest          # offline tests (FakeTranscriber)
+```
+
+## orchestrator (Components C + D)
+```bash
+cd orchestrator && LLM_PROVIDER=groq GROQ_API_KEY=... GRAPH_ENABLED=false ./deploy.sh  # :8798
+../.venv/bin/pytest          # offline tests (FakeLLM + FakeGraph)
+```
+
+## All tests at once
+```bash
+.venv/bin/pytest tests stt-service orchestrator -q
+dotnet test media-bot/tests/MediaBot.Tests.csproj
+```
 
 ## Debugging
 - Every service tags logs with the `meetingId` correlation id.

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "0.1.0",
+  "id": "REPLACE_WITH_BOT_APP_ID",
+  "packageName": "com.mahdar.bot",
+  "developer": {
+    "name": "Mahdar",
+    "websiteUrl": "https://example.com/mahdar",
+    "privacyUrl": "https://example.com/mahdar/privacy",
+    "termsOfUseUrl": "https://example.com/mahdar/terms"
+  },
+  "name": {
+    "short": "Mahdar Bot",
+    "full": "Mahdar — Arabic Meeting Minutes Bot"
+  },
+  "description": {
+    "short": "Joins meetings and posts an Arabic meeting-of-minutes.",
+    "full": "Mahdar joins Teams meetings, transcribes Arabic (with English code-switching), and posts an Arabic meeting-of-minutes adaptive card with decisions, action items, and follow-up scheduling."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#1F6FEB",
+  "bots": [
+    {
+      "botId": "REPLACE_WITH_BOT_APP_ID",
+      "scopes": ["team", "groupChat"],
+      "supportsCalling": true,
+      "supportsVideo": false,
+      "isNotificationOnly": false
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["REPLACE_WITH_PUBLIC_HOSTNAME"],
+  "webApplicationInfo": {
+    "id": "REPLACE_WITH_BOT_APP_ID",
+    "resource": "https://RscBasedStoreApp"
+  }
+}

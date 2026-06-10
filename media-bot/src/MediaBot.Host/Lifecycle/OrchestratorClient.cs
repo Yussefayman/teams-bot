@@ -1,6 +1,8 @@
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Mahdar.MediaBot.Calls;
@@ -13,6 +15,13 @@ namespace Mahdar.MediaBot.Host.Lifecycle;
 /// <summary>POSTs the call-ended event to the orchestrator (/webhooks/call-ended).</summary>
 public sealed class OrchestratorClient : ICallEndedNotifier
 {
+    // Omit null fields (e.g. a participant with no email) so the payload satisfies
+    // call_event.schema.json, which types `email` as string (null not allowed).
+    private static readonly JsonSerializerOptions JsonOpts = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
     private readonly HttpClient _http;
     private readonly BotOptions _opts;
     private readonly ILogger<OrchestratorClient> _log;
@@ -29,7 +38,7 @@ public sealed class OrchestratorClient : ICallEndedNotifier
         var url = $"{_opts.OrchestratorBaseUrl.TrimEnd('/')}/webhooks/call-ended";
         try
         {
-            var res = await _http.PostAsJsonAsync(url, ev, ct);
+            var res = await _http.PostAsJsonAsync(url, ev, JsonOpts, ct);
             _log.LogInformation("call-ended -> {Url} : {Status}", url, (int)res.StatusCode);
             res.EnsureSuccessStatusCode();
         }

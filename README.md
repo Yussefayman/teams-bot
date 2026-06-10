@@ -20,18 +20,30 @@ Services talk only over the network using the JSON schemas in `shared/schemas/`.
 
 ## Status
 
-Building **M0** (foundations) and **M1** (audio proof). See `docs/PLAN.md` for the
-full plan and `CLAUDE.md` for working agreements.
+All three services are built and tested on macOS using **Groq's hosted Whisper** (STT)
+and **Groq's LLM** (MoM) in place of the GPU/Azure backends — swapped via config for
+production. Only the live Teams media socket (Windows) and the real Azure/Graph wiring
+need a deployment environment. See `docs/PLAN.md` for the plan and `CLAUDE.md` for
+working agreements.
 
 - `docs/SETUP-AZURE.md` — manual Azure/M365 setup runbook (M0)
-- `docs/RUNBOOK.md` — how to start/stop/debug each service
+- `docs/RUNBOOK.md` — how to start/stop/debug each service + the demo
 - `docs/M0-M1-CHECKLIST.md` — what is done vs. what needs your hands
 
-## Quick verification (runs anywhere, no Azure needed)
+## Full pipeline demo (Mac, real Groq — no Azure/Windows)
 
 ```bash
-tools/verify.sh
+# put GROQ_API_KEY in stt-service/.env and orchestrator/.env, then:
+scripts/demo_e2e.sh
 ```
 
-Validates the JSON schemas against their example fixtures and runs the WAV-format
-reference test (the oracle for the M1 audio dump).
+media-bot (replays an Arabic WAV) → STT (Groq Whisper) → orchestrator (Groq LLM) →
+Arabic MoM adaptive card + an auto-scheduled follow-up event, all printed at the end.
+
+## Quick verification (runs anywhere, no Azure or Groq needed)
+
+```bash
+tools/verify.sh                                          # schemas + WAV oracle
+.venv/bin/pytest tests stt-service orchestrator -q       # 32 Python tests (offline fakes)
+dotnet test media-bot/tests/MediaBot.Tests.csproj        # 9 C# tests
+```

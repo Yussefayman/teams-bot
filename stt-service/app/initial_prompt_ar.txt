@@ -1,0 +1,1 @@
+اجتماع عمل تقني باللغة العربية مع مصطلحات إنجليزية. أمثلة: API, Gateway, production, deployment, latency, regression tests, SDK, dashboard, rollback, sprint, backend, database.

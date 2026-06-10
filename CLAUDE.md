@@ -14,8 +14,12 @@ A Microsoft Teams bot that joins meetings, streams live audio to our own Arabic 
 | Name | Lang | Host | Role |
 |---|---|---|---|
 | **media-bot** (A) | C# / .NET | cross-platform host; Windows VM for real meetings | Joins call, streams PCM audio over WebSocket, emits lifecycle webhooks |
-| **stt-service** (B) | Python | GPU host (Linux) | Silero VAD + faster-whisper large-v3 → Arabic transcription |
-| **orchestrator** (C+D) | Python | Any Linux | Webhook receiver, MoM LLM pipeline, Graph actions (post card, create events) |
+| **stt-service** (B) | Python | Mac/dev via Groq; GPU host for prod | VAD + Whisper (Groq hosted / faster-whisper) → Arabic transcription |
+| **orchestrator** (C+D) | Python | Any host | Webhook, MoM LLM (Groq/Azure), deterministic date resolution, Graph actions |
+
+**Dev backends (swap via config):** STT `TRANSCRIBER=groq|fake|faster-whisper`; orchestrator `LLM_PROVIDER=groq|fake|azure-openai` and `GRAPH_ENABLED` (FakeGraph on Mac). Groq gives real Arabic STT + MoM on a laptop with no GPU/Azure. The full pipeline runs on Mac via `scripts/demo_e2e.sh`. Unit tests use the `fake` backends (offline). **Never commit the Groq key** — it lives in gitignored `stt-service/.env` and `orchestrator/.env`.
+
+**Key design rule (validated):** follow-up dates are resolved deterministically in `orchestrator/app/dates.py` (anchored to meeting end + `Asia/Riyadh`), NOT by the LLM — the LLM miscounts weekdays and drops the timezone.
 
 Services communicate **only over the network** using JSON schemas in `shared/schemas/`. No service imports another's code.
 

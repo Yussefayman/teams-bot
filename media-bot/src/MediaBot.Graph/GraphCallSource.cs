@@ -206,13 +206,7 @@ public sealed class GraphCallSourceFactory : ICallSourceFactory
         var (threadId, organizerId, tenantId) = JoinUrlParser.Parse(joinUrl);
         var client = _client.Value;
 
-        var mediaSession = client.CreateMediaSession(
-            new AudioSocketSettings
-            {
-                StreamDirections = StreamDirection.Recvonly,
-                SupportedAudioFormat = AudioFormat.Pcm16K,
-            },
-            new VideoSocketSettings { StreamDirections = StreamDirection.Inactive });
+        var mediaSession = CreateMediaSession(client);
 
         var meetingInfo = new OrganizerMeetingInfo
         {
@@ -242,6 +236,39 @@ public sealed class GraphCallSourceFactory : ICallSourceFactory
             StartedAt: DateTimeOffset.UtcNow);
 
         return new GraphCallSource(client, call, mediaSession, info, _log);
+    }
+
+    // Mirrors PolicyRecordingBot.Bot.CreateLocalMediaSession: the SDK overload requires a
+    // video socket list + a VBSS socket alongside the audio socket. We only consume the
+    // mixed Pcm16K audio socket (MoM is audio-only), so video/VBSS are recv-only and unread.
+    private static ILocalMediaSession CreateMediaSession(ICommunicationsClient client)
+    {
+        var videoSockets = new List<VideoSocketSettings>
+        {
+            new VideoSocketSettings
+            {
+                StreamDirections = StreamDirection.Recvonly,
+                ReceiveColorFormat = VideoColorFormat.H264,
+            },
+        };
+
+        var vbssSocket = new VideoSocketSettings
+        {
+            StreamDirections = StreamDirection.Recvonly,
+            ReceiveColorFormat = VideoColorFormat.H264,
+            MediaType = MediaType.Vbss,
+            SupportedSendVideoFormats = new List<VideoFormat> { VideoFormat.H264_1920x1080_1_875Fps },
+        };
+
+        return client.CreateMediaSession(
+            new AudioSocketSettings
+            {
+                StreamDirections = StreamDirection.Recvonly,
+                SupportedAudioFormat = AudioFormat.Pcm16K,
+            },
+            videoSockets,
+            vbssSocket,
+            mediaSessionId: Guid.NewGuid());
     }
 
     private static IPAddress ResolvePublicIp(string hostname)

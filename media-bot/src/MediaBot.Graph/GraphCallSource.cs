@@ -217,7 +217,10 @@ public sealed class GraphCallSourceFactory : ICallSourceFactory
                 User = new Identity { Id = organizerId },
             },
         };
-        meetingInfo.Organizer.User.SetTenantId(tenantId);
+        meetingInfo.Organizer.AdditionalData = new Dictionary<string, object>
+        {
+            { "tenantId", tenantId }
+        };
 
         var chatInfo = new ChatInfo { ThreadId = threadId, MessageId = "0" };
 

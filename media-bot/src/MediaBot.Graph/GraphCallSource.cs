@@ -17,6 +17,8 @@ using Microsoft.Graph.Communications.Calls;
 using Microsoft.Graph.Communications.Calls.Media;
 using Microsoft.Graph.Communications.Client;
 using Microsoft.Graph.Communications.Common.Telemetry;
+using Microsoft.Graph.Communications.Resources;
+using Microsoft.Graph.Models;
 using Microsoft.Skype.Bots.Media;
 
 // Microsoft.Graph also defines a `Participant` type; our lifecycle DTO is distinct.
@@ -225,7 +227,7 @@ public sealed class GraphCallSourceFactory : ICallSourceFactory
         };
 
         _log.LogInformation("joining meeting {MeetingId} (thread {ThreadId})", meetingId, threadId);
-        var call = await client.Calls().AddAsync(joinParams, ct).ConfigureAwait(false);
+        var call = await client.Calls().AddAsync(joinParams, Guid.NewGuid(), ct).ConfigureAwait(false);
 
         var info = new CallInfo(
             MeetingId: meetingId,

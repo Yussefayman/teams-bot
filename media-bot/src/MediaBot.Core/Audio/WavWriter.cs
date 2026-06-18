@@ -44,7 +44,11 @@ public sealed class WavWriter : IDisposable
         if (_disposed) throw new ObjectDisposedException(nameof(WavWriter));
         if ((pcm.Length & 1) != 0)
             throw new ArgumentException("PCM byte count must be even (16-bit samples)", nameof(pcm));
+#if NETFRAMEWORK
+        _stream.Write(pcm.ToArray(), 0, pcm.Length);   // net472 Stream has no span overload
+#else
         _stream.Write(pcm);
+#endif
         _dataBytes += pcm.Length;
     }
 

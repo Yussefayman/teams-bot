@@ -13,7 +13,7 @@ A Microsoft Teams bot that joins meetings, streams live audio to our own Arabic 
 
 | Name | Lang | Host | Role |
 |---|---|---|---|
-| **media-bot** (A) | C# / .NET | cross-platform host; Windows VM for real meetings | Joins call, streams PCM audio over WebSocket, emits lifecycle webhooks |
+| **media-bot** (A) | C# (.NET Framework 4.7.2) | Windows VM (Azure) | Joins call, streams PCM audio over WebSocket, emits lifecycle webhooks. Core lib multi-targets net8.0 for cross-platform unit tests. |
 | **stt-service** (B) | Python | Mac/dev via Groq; GPU host for prod | VAD + Whisper (Groq hosted / faster-whisper) → Arabic transcription |
 | **orchestrator** (C+D) | Python | Any host | Webhook, MoM LLM (Groq/Azure), deterministic date resolution, Graph actions |
 
@@ -23,12 +23,16 @@ A Microsoft Teams bot that joins meetings, streams live audio to our own Arabic 
 
 Services communicate **only over the network** using JSON schemas in `shared/schemas/`. No service imports another's code.
 
-### media-bot is three projects (decided during M1)
-- `MediaBot.Core` (`net8.0`, any OS) — WavWriter, ring buffer, STT forwarder, lifecycle DTOs, `CallRunner`, `FakeCallSource`.
-- `MediaBot.Host` (`net8.0`, any OS) — ASP.NET host, HTTP API, DI, config, call-source selection.
-- `MediaBot.Graph` (`net8.0-windows`, **Windows only**) — `GraphCallSource`, the real Teams media socket (Graph Communications SDK). Referenced by the Host only on Windows.
+### media-bot is three projects (decided during M1; retargeted to net472 during M2)
+- `MediaBot.Core` (multi-targets `net8.0;net472`) — WavWriter, ring buffer, STT forwarder, lifecycle DTOs, `CallRunner`, `FakeCallSource`. Unit-tested on `net8.0` (Mac/Linux). The `net472` TFM exists only so Host/Graph can reference it.
+- `MediaBot.Host` (`net472`, **Windows only**) — `HttpListener` HTTP API, DI, config, call-source selection. **Not ASP.NET Core** — see below.
+- `MediaBot.Graph` (`net472`, **Windows only**) — `GraphCallSource`, the real Teams media socket (Graph Communications SDK). Referenced by the Host.
 
-Audio source is pluggable behind `ICallSource`: `CALL_SOURCE=fake` (replays a WAV — full pipeline runs/tests on macOS) or `CALL_SOURCE=graph` (real meeting, Windows). Only the literal live-media socket is Windows-bound; everything else is cross-platform and unit/integration-tested on Mac.
+**Why net472 (hard constraint, learned on the VM):** the Skype/Graph application-hosted media SDK is .NET Framework only — its `MPAzAppHost` native host depends on `System.Web.Http`, and the net472 NuGet package ships the native media libs (`src/skype_media_lib/*`, copied by `build/net472/*.targets`). On .NET 8 it fails with `DllNotFoundException: NativeMedia`. Because the media SDK forces net472, the Host must also be net472, which rules out ASP.NET Core/Kestrel (net472 max is ASP.NET Core 2.1, EOL) — hence `HttpListener`. TLS is bound to the port via `netsh http add sslcert` (http.sys), not a Kestrel pfx.
+
+`Microsoft.NETFramework.ReferenceAssemblies` lets the whole solution **compile** on Mac/Linux (`dotnet build media-bot/MediaBot.sln`), but the Host/Graph only **run** on the Windows VM (native media libs). Mac dev/CI = `dotnet test media-bot/tests/MediaBot.Tests.csproj` (Core on `net8.0`).
+
+Audio source is pluggable behind `ICallSource`: `CALL_SOURCE=fake` (replays a WAV — Core logic + forwarder are unit/integration-tested on macOS) or `CALL_SOURCE=graph` (real meeting, Windows VM only).
 
 ---
 

@@ -43,16 +43,28 @@ and record the values into `media-bot/.env` (never commit secrets).
 
 Application-hosted media is Windows-only (cannot run in App Service/containers/Linux).
 
-- [ ] Provision a **Windows Server VM** (Standard D4s v5 to start).
+- [ ] Provision a **Windows Server VM** with **≥ 2 vCPUs** (Standard D4s v5 to start).
+      The media platform refuses to initialize on a single core
+      (`MediaPlatform needs a system with at least 2 cores`).
+- [ ] **Media platform prerequisites** (without these the SDK throws
+      `DllNotFoundException: NativeMedia` / `Media platform failed to initialize`):
+  - [ ] Install **Media Foundation** (absent by default on Windows Server):
+        `Install-WindowsFeature Server-Media-Foundation` then **reboot**.
+  - [ ] Install the **Visual C++ 2015–2022 x64 redistributable** (`vc_redist.x64.exe`).
 - [ ] Assign a **public DNS name** → this is `PUBLIC_HOSTNAME`.
 - [ ] Obtain a **TLS certificate** for that FQDN (real domain + Let's Encrypt or
       Azure-issued). Import to the machine cert store; record the **thumbprint**
       (`CERT_THUMBPRINT`).
-- [ ] Bind the cert to the media port:
-      `netsh http add sslcert ipport=0.0.0.0:8445 certhash=<THUMBPRINT> appid={<guid>}`
+- [ ] Bind the cert to **both** the HTTP API port (HttpListener/http.sys serves https
+      this way — there is no Kestrel) and the media port:
+      `netsh http add sslcert ipport=0.0.0.0:443 certhash=<THUMBPRINT> appid={<guid>}`
+      and `netsh http add sslcert ipport=0.0.0.0:8445 certhash=<THUMBPRINT> appid={<guid>}`
+- [ ] Reserve the HTTP API URL ACL: `netsh http add urlacl url=https://+:443/ user=Everyone`
 - [ ] Open ports in the **NSG + Windows firewall**: `443` (signaling/HTTP) and the media
       TCP port (`MEDIA_PORT`, default `8445`).
-- [ ] Install the **.NET 8 runtime** on the VM.
+- [ ] Install the **.NET Framework 4.7.2+ runtime** (preinstalled on Windows Server 2019+).
+      The media bot is net472 — the Skype media SDK is .NET Framework only; .NET 8 fails
+      with `DllNotFoundException: NativeMedia`.
 
 ## 5. Deploy the media bot to the VM
 

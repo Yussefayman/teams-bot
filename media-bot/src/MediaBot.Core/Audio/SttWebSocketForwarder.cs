@@ -71,25 +71,28 @@ public sealed class SttWebSocketForwarder : IAudioSink
 
     private async Task PumpAsync(CancellationToken ct)
     {
-        await foreach (var frame in _frames.Reader.ReadAllAsync(ct))
+        while (await _frames.Reader.WaitToReadAsync(ct).ConfigureAwait(false))
         {
-            try
+            while (_frames.Reader.TryRead(out var frame))
             {
-                if (_ws is { State: WebSocketState.Open })
+                try
                 {
-                    await _ws.SendAsync(frame, WebSocketMessageType.Binary, true, ct);
+                    if (_ws is { State: WebSocketState.Open })
+                    {
+                        await _ws.SendAsync(new ArraySegment<byte>(frame), WebSocketMessageType.Binary, true, ct);
+                    }
+                    else
+                    {
+                        _ring.Write(frame);
+                        await ReconnectAsync(ct);
+                    }
                 }
-                else
+                catch (Exception ex) when (ex is not OperationCanceledException)
                 {
+                    _log.LogWarning(ex, "send failed; buffering and reconnecting");
                     _ring.Write(frame);
                     await ReconnectAsync(ct);
                 }
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                _log.LogWarning(ex, "send failed; buffering and reconnecting");
-                _ring.Write(frame);
-                await ReconnectAsync(ct);
             }
         }
     }
@@ -105,7 +108,7 @@ public sealed class SttWebSocketForwarder : IAudioSink
                 await ConnectAndHandshakeAsync(isResume: true, ct);
                 var buffered = _ring.Drain();
                 if (buffered.Length > 0)
-                    await _ws!.SendAsync(buffered, WebSocketMessageType.Binary, true, ct);
+                    await _ws!.SendAsync(new ArraySegment<byte>(buffered), WebSocketMessageType.Binary, true, ct);
                 _log.LogInformation("reconnected; replayed {Bytes} buffered bytes", buffered.Length);
                 return;
             }
@@ -135,7 +138,7 @@ public sealed class SttWebSocketForwarder : IAudioSink
     {
         if (_ws is not { State: WebSocketState.Open }) return;
         var bytes = JsonSerializer.SerializeToUtf8Bytes(message, Json);
-        await _ws.SendAsync(bytes, WebSocketMessageType.Text, true, ct);
+        await _ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, ct);
     }
 
     public async Task EndAsync(CancellationToken ct)

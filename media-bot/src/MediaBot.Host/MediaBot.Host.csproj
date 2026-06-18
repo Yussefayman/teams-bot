@@ -1,30 +1,47 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Cross-platform ASP.NET host: HTTP API, DI, config, and call orchestration.
-    Builds and runs on macOS/Linux with CALL_SOURCE=fake. The real Teams media
-    socket lives in MediaBot.Graph, which is referenced and compiled ONLY on Windows
-    (see the conditional ProjectReference below + the WINDOWS symbol).
+    WINDOWS-ONLY, .NET FRAMEWORK console host. It must be net472 to reference
+    MediaBot.Graph (the Skype media SDK is net472-only — see MediaBot.Graph.csproj),
+    so the HTTP API is served by System.Net.HttpListener (http.sys) instead of
+    ASP.NET Core / Kestrel, which does not run on .NET Framework. The cross-platform
+    logic + unit tests live in MediaBot.Core (net8.0) and still build/run on Mac/Linux;
+    this host does not.
+
+    TLS: HttpListener relies on http.sys, so bind the cert to the port with
+    `netsh http add sslcert` (CERT_THUMBPRINT) rather than a Kestrel pfx. See deploy.ps1.
   -->
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Mahdar.MediaBot.Host</RootNamespace>
     <AssemblyName>Mahdar.MediaBot.Host</AssemblyName>
     <LangVersion>latest</LangVersion>
+    <!-- Native media DLLs are x64; the host process must be 64-bit. -->
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../MediaBot.Core/MediaBot.Core.csproj" />
-  </ItemGroup>
-
-  <!-- Windows-only: the Graph Communications media integration. Skipped on mac/Linux. -->
-  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
     <ProjectReference Include="../MediaBot.Graph/MediaBot.Graph.csproj" />
   </ItemGroup>
-  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
-  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
+    <PackageReference Include="System.Net.Http.Json" Version="8.0.1" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <!-- Cross-platform net472 reference assemblies so this compiles on Mac/Linux CI too. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
 
 </Project>

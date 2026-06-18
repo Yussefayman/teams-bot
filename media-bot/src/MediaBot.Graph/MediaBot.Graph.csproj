@@ -1,24 +1,34 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    WINDOWS-ONLY. The Graph Communications media platform ships native Windows media
-    libraries (application-hosted media has no Linux/macOS support — Microsoft's hard
-    constraint, plan §1). This project therefore targets net8.0-windows and is only
-    referenced by the Host on Windows. Do not attempt to build it on macOS/Linux.
+    WINDOWS-ONLY, .NET FRAMEWORK. The Skype/Graph application-hosted media SDK is
+    net472-only: its MPAzureAppHost depends on System.Web.Http (5.2.x), a .NET
+    Framework library that cannot load on .NET 8 (DllNotFoundException / NativeMedia).
+    The official microsoft/graph-comms-samples RecordingBot targets v4.7.2 for the
+    same reason. So this project targets net472 and is referenced by the Host (also
+    net472) only on Windows. Do not attempt to build it on macOS/Linux.
 
     Pin these to the versions used by the current microsoft/graph-comms-samples
     RecordingBot sample; verify exact versions when scaffolding on the VM.
   -->
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Mahdar.MediaBot.Graph</RootNamespace>
     <LangVersion>latest</LangVersion>
+    <!-- Native media DLLs (NativeMedia.dll) are x64; the process must be 64-bit. -->
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../MediaBot.Core/MediaBot.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- HttpUtility.ParseQueryString lives in System.Web on .NET Framework. -->
+    <Reference Include="System.Web" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +38,10 @@
     <PackageReference Include="Microsoft.Graph.Communications.Client" Version="1.2.0.10563" />
     <!-- App-only (client-credentials) token acquisition for outbound Graph calls. -->
     <PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
+    <!-- net472 BCL has no System.Text.Json (join-URL context + onlineMeetings parsing). -->
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <!-- Cross-platform net472 reference assemblies so this compiles on Mac/Linux CI too. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

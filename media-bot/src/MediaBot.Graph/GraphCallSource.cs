@@ -269,7 +269,7 @@ public sealed class GraphCallSourceFactory : ICallSourceFactory
         await _auth.Value.AuthenticateOutboundRequestAsync(req, _opts.TenantId).ConfigureAwait(false);
 
         using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
-        var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        var body = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
         if (!resp.IsSuccessStatusCode)
             throw new InvalidOperationException(
                 $"Graph onlineMeetings lookup returned {(int)resp.StatusCode}: {body}");
@@ -390,9 +390,9 @@ public static class JoinUrlParser
         var idx = path.IndexOf(meetupMarker, StringComparison.OrdinalIgnoreCase);
         if (idx >= 0)
         {
-            var rest = path[(idx + meetupMarker.Length)..];
+            var rest = path.Substring(idx + meetupMarker.Length);
             var slash = rest.IndexOf('/');
-            var threadId = slash >= 0 ? rest[..slash] : rest;
+            var threadId = slash >= 0 ? rest.Substring(0, slash) : rest;
             if (string.IsNullOrEmpty(threadId)) throw new ArgumentException("could not parse thread id", nameof(joinUrl));
 
             var context = HttpUtility.ParseQueryString(uri.Query).Get("context")

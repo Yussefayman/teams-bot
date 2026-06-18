@@ -37,7 +37,7 @@ public sealed class FakeCallSource : ICallSource
     public async Task<CallSummary> PumpAsync(IAudioSink sink, CancellationToken ct)
     {
         var (offset, length) = LocateDataChunk(_wavPath);
-        await using var fs = new FileStream(_wavPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var fs = new FileStream(_wavPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         fs.Seek(offset, SeekOrigin.Begin);
 
         var buf = new byte[FrameBytes];
@@ -46,7 +46,7 @@ public sealed class FakeCallSource : ICallSource
         while (remaining > 0 && !ct.IsCancellationRequested)
         {
             int want = (int)Math.Min(FrameBytes, remaining);
-            int read = await fs.ReadAsync(buf.AsMemory(0, want), ct);
+            int read = await fs.ReadAsync(buf, 0, want, ct);
             if (read <= 0) break;
             // pad final short frame to whole samples
             if ((read & 1) != 0) read--;
@@ -60,7 +60,7 @@ public sealed class FakeCallSource : ICallSource
         return new CallSummary(Info.Participants, DateTimeOffset.UtcNow);
     }
 
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    public ValueTask DisposeAsync() => default;   // net472 has no ValueTask.CompletedTask
 
     /// <summary>Find the PCM 'data' chunk in a RIFF file (skips any chunks before it).</summary>
     private static (long offset, long length) LocateDataChunk(string path)

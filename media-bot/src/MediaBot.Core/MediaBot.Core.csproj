@@ -4,9 +4,15 @@
     Cross-platform core: WAV writer, ring buffer, STT WebSocket forwarder, config,
     control-message DTOs. NO Graph Communications SDK reference, so this builds and
     is unit-tested on Linux/macOS as well as Windows.
+
+    Multi-targets net8.0 (Mac/Linux dev + unit tests) and net472. The net472 TFM
+    exists only so the Windows-only Host/Graph (which MUST be .NET Framework — the
+    Skype media SDK's MPAzureAppHost needs System.Web.Http) can reference this core.
+    net472 is added only on Windows so `dotnet build`/`dotnet test` on Mac/Linux,
+    which have no .NET Framework reference assemblies, stay net8.0-only.
   -->
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;net472</TargetFrameworks>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Mahdar.MediaBot</RootNamespace>
@@ -16,6 +22,16 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+  </ItemGroup>
+
+  <!-- net472 lacks Span/Channels/async-streams/System.Text.Json in the BCL. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+    <!-- Cross-platform net472 reference assemblies so this compiles on Mac/Linux CI too. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

@@ -245,29 +245,18 @@ public sealed class GraphCallSourceFactory : ICallSourceFactory
     }
 
     // Resolves a join URL to the chat thread + organizer/tenant the SDK needs. Work/school
-    // meetup-join URLs carry everything in the URL; personal (teams.live.com) URLs do not,
-    // so we look the meeting up via Graph, then fall back to the SDK's own URL parser.
+    // meetup-join URLs carry everything in the URL; personal (teams.live.com) URLs do not, so
+    // they are looked up via Graph. The 1.2.x Communications SDK has no join-by-URL API
+    // (no JoinUrl on JoinMeetingParameters), so a failed lookup has nothing to fall back to
+    // and propagates — JoinAsync logs it.
     private async Task<JoinTarget> ResolveJoinTargetAsync(string joinUrl, CancellationToken ct)
     {
         var parsed = JoinUrlParser.Parse(joinUrl);
         if (parsed.Kind == JoinUrlKind.MeetupJoin)
             return BuildTarget(parsed.ThreadId!, parsed.OrganizerId!, parsed.TenantId!);
 
-        try
-        {
-            var resolved = await ResolvePersonalMeetingViaGraphAsync(joinUrl, ct).ConfigureAwait(false);
-            return BuildTarget(resolved.ThreadId!, resolved.OrganizerId!, resolved.TenantId!);
-        }
-        catch (Exception ex)
-        {
-            _log.LogWarning(ex, "Graph onlineMeetings resolution failed for {JoinUrl}; "
-                + "falling back to SDK join-URL parse: {Error}", joinUrl, ex.Message);
-
-            var (chatInfo, meetingInfo) = JoinInfo.ParseJoinURL(joinUrl);
-            var threadId = chatInfo.ThreadId ?? "";
-            var organizerId = (meetingInfo as OrganizerMeetingInfo)?.Organizer?.User?.Id ?? "";
-            return new JoinTarget(chatInfo, meetingInfo, threadId, organizerId, _opts.TenantId);
-        }
+        var resolved = await ResolvePersonalMeetingViaGraphAsync(joinUrl, ct).ConfigureAwait(false);
+        return BuildTarget(resolved.ThreadId!, resolved.OrganizerId!, resolved.TenantId!);
     }
 
     private async Task<ParsedJoinUrl> ResolvePersonalMeetingViaGraphAsync(string joinUrl, CancellationToken ct)
